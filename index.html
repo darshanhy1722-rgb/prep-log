@@ -226,6 +226,30 @@
   .hist-table td{font-size:13.5px; padding:9px 4px; border-bottom:1px solid var(--border); font-weight:700;}
   .hist-table td.wk{color:var(--ink-dim); font-weight:500;}
 
+  .notif-banner{
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:14px; margin:12px 0; font-size:12.5px; color:var(--ink-dim);
+  }
+  .notif-banner.ok{border-color:rgba(62,213,152,0.4); color:var(--good);}
+  .notif-banner.warn{border-color:rgba(255,90,54,0.4); color:var(--accent-2);}
+  .meal-card{
+    display:flex; gap:12px; align-items:flex-start;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:14px; margin-bottom:10px; cursor:pointer; transition:border-color 0.2s, box-shadow 0.2s;
+  }
+  .meal-card.done{border-color:rgba(62,213,152,0.4); box-shadow:0 0 0 1px rgba(62,213,152,0.15) inset;}
+  .meal-check{
+    width:26px; height:26px; border-radius:50%; flex-shrink:0; margin-top:2px;
+    border:2px solid var(--border); display:flex; align-items:center; justify-content:center;
+    color:var(--good); font-size:13px; font-weight:800; transition:all 0.2s cubic-bezier(.34,1.56,.64,1);
+  }
+  .meal-card.done .meal-check{border-color:var(--good); background:var(--good-dim); transform:scale(1.05);}
+  .meal-info{flex:1;}
+  .meal-top{display:flex; justify-content:space-between; align-items:baseline;}
+  .meal-name{font-weight:700; font-size:14.5px;}
+  .meal-time{font-size:12px; color:var(--ink-faint); font-weight:600;}
+  .meal-detail{font-size:12.5px; color:var(--ink-dim); margin-top:4px; line-height:1.4;}
+
   .empty-state{text-align:center; padding:50px 20px; color:var(--ink-dim);}
   .empty-state .display{font-size:24px; color:var(--ink); margin-bottom:6px;}
 
@@ -316,6 +340,116 @@ const DAYS = {
   ]},
 };
 const DAY_KEYS = Object.keys(DAYS);
+
+// --- Meal phases (egg-free chart) ---
+const MEAL_PHASES = [
+  { minWeek:1, maxWeek:4, label:"Wk 1-4 · Maintenance", meals:[
+    {name:"Breakfast", time:"07:00", detail:"220g tofu scramble + 70g oats"},
+    {name:"Mid-Morning", time:"10:30", detail:"75g soya chunks (dry) + 1 banana"},
+    {name:"Lunch", time:"13:00", detail:"1.5 cups dal + 100g paneer/tofu + 200g brown rice + veg sabzi"},
+    {name:"Pre/Post-Workout", time:"16:30", detail:"1 scoop pea protein shake + 1 fruit"},
+    {name:"Dinner", time:"20:00", detail:"1.5 cups rajma/chickpea curry + 120g quinoa + 150g soy yogurt"},
+    {name:"Before Bed", time:"22:00", detail:"Plant protein shake + 12 almonds"},
+  ]},
+  { minWeek:5, maxWeek:8, label:"Wk 5-8 · Cut Start", meals:[
+    {name:"Breakfast", time:"07:00", detail:"220g tofu scramble + 55g oats"},
+    {name:"Mid-Morning", time:"10:30", detail:"75g soya chunks (dry) + 1 small banana"},
+    {name:"Lunch", time:"13:00", detail:"1.5 cups dal + 100g paneer/tofu + 150g brown rice + veg sabzi"},
+    {name:"Pre/Post-Workout", time:"16:30", detail:"1 scoop pea protein shake + 1 fruit"},
+    {name:"Dinner", time:"20:00", detail:"1.5 cups rajma/chickpea curry + 90g quinoa + 150g soy yogurt"},
+    {name:"Before Bed", time:"22:00", detail:"Plant protein shake + 10 almonds"},
+  ]},
+  { minWeek:9, maxWeek:12, label:"Wk 9-12 · Cut", meals:[
+    {name:"Breakfast", time:"07:00", detail:"220g tofu scramble + 50g oats"},
+    {name:"Mid-Morning", time:"10:30", detail:"70g soya chunks (dry) + 1 small banana"},
+    {name:"Lunch", time:"13:00", detail:"1.5 cups dal + 100g paneer/tofu + 140g brown rice + veg sabzi"},
+    {name:"Pre/Post-Workout", time:"16:30", detail:"1 scoop pea protein shake + small fruit"},
+    {name:"Dinner", time:"20:00", detail:"1.5 cups rajma/chickpea curry + 85g quinoa + 150g soy yogurt"},
+    {name:"Before Bed", time:"22:00", detail:"Plant protein shake + 10 almonds"},
+  ]},
+  { minWeek:13, maxWeek:16, label:"Wk 13-16 · Cut Deep", meals:[
+    {name:"Breakfast", time:"07:00", detail:"220g tofu scramble + 45g oats"},
+    {name:"Mid-Morning", time:"10:30", detail:"65g soya chunks (dry) + ½ banana"},
+    {name:"Lunch", time:"13:00", detail:"1.5 cups dal + 90g paneer/tofu + 125g brown rice + veg sabzi"},
+    {name:"Pre/Post-Workout", time:"16:30", detail:"1 scoop pea protein shake + ½ fruit"},
+    {name:"Dinner", time:"20:00", detail:"1.5 cups rajma/chickpea curry + 75g quinoa + 150g soy yogurt"},
+    {name:"Before Bed", time:"22:00", detail:"Plant protein shake + 8 almonds"},
+  ]},
+  { minWeek:17, maxWeek:18, label:"Wk 17-18 · Sharpen", meals:[
+    {name:"Breakfast", time:"07:00", detail:"200g tofu scramble + 40g oats"},
+    {name:"Mid-Morning", time:"10:30", detail:"60g soya chunks (dry) + ½ banana"},
+    {name:"Lunch", time:"13:00", detail:"1.5 cups dal + 90g paneer/tofu + 110g brown rice + veg sabzi"},
+    {name:"Pre/Post-Workout", time:"16:30", detail:"1 scoop pea protein shake + small fruit"},
+    {name:"Dinner", time:"20:00", detail:"1.5 cups rajma/chickpea curry + 70g quinoa + 150g soy yogurt"},
+    {name:"Before Bed", time:"22:00", detail:"Plant protein shake + 8 almonds"},
+  ]},
+  { minWeek:19, maxWeek:20, label:"Wk 19-20 · Final Cut", meals:[
+    {name:"Breakfast", time:"07:00", detail:"200g tofu scramble + 35g oats"},
+    {name:"Mid-Morning", time:"10:30", detail:"55g soya chunks (dry) + ½ banana"},
+    {name:"Lunch", time:"13:00", detail:"1.5 cups dal + 80g paneer/tofu + 100g brown rice + veg sabzi"},
+    {name:"Pre/Post-Workout", time:"16:30", detail:"1 scoop pea protein shake + small fruit"},
+    {name:"Dinner", time:"20:00", detail:"1.5 cups rajma/chickpea curry + 60g quinoa + 150g soy yogurt"},
+    {name:"Before Bed", time:"22:00", detail:"Plant protein shake + 6 almonds"},
+  ]},
+  { minWeek:21, maxWeek:99, label:"Peak Week", meals:[
+    {name:"Peak Week Protocol", time:"—", detail:"Individualized carb/sodium/water manipulation — follow your coach's day-by-day plan, not a fixed meal list."},
+  ]},
+];
+
+function getPhaseForWeek(week){
+  return MEAL_PHASES.find(p => week >= p.minWeek && week <= p.maxWeek) || MEAL_PHASES[0];
+}
+
+let notifiedTimer = null;
+
+function todayKey(){ return new Date().toISOString().slice(0,10); }
+
+async function loadMealStatus(dateKey){
+  try{ const raw = localStorage.getItem(STORAGE_PREFIX + 'meals:' + dateKey); return raw ? JSON.parse(raw) : {}; }
+  catch(e){ return {}; }
+}
+async function saveMealStatus(dateKey, status){
+  try{ localStorage.setItem(STORAGE_PREFIX + 'meals:' + dateKey, JSON.stringify(status)); }catch(e){}
+}
+async function loadNotifiedStatus(dateKey){
+  try{ const raw = localStorage.getItem(STORAGE_PREFIX + 'notified:' + dateKey); return raw ? JSON.parse(raw) : {}; }
+  catch(e){ return {}; }
+}
+async function saveNotifiedStatus(dateKey, status){
+  try{ localStorage.setItem(STORAGE_PREFIX + 'notified:' + dateKey, JSON.stringify(status)); }catch(e){}
+}
+
+function timeToMinutes(t){
+  const [h,m] = t.split(':').map(Number);
+  return h*60+m;
+}
+
+async function checkMealReminders(){
+  if(Notification.permission !== 'granted') return;
+  const week = state.currentWeek;
+  const phase = getPhaseForWeek(week);
+  const dateKey = todayKey();
+  const eaten = await loadMealStatus(dateKey);
+  const notified = await loadNotifiedStatus(dateKey);
+  const now = new Date();
+  const nowMin = now.getHours()*60 + now.getMinutes();
+
+  for(const meal of phase.meals){
+    if(meal.time === '—') continue;
+    const mealMin = timeToMinutes(meal.time);
+    if(nowMin >= mealMin && nowMin <= mealMin + 45 && !eaten[meal.name] && !notified[meal.name]){
+      new Notification('Meal time: ' + meal.name, { body: meal.detail, tag: meal.name + dateKey });
+      notified[meal.name] = true;
+      await saveNotifiedStatus(dateKey, notified);
+    }
+  }
+}
+
+function startMealReminderLoop(){
+  if(notifiedTimer) clearInterval(notifiedTimer);
+  checkMealReminders();
+  notifiedTimer = setInterval(checkMealReminders, 60000);
+}
 
 let state = {
   profile: null,
@@ -512,6 +646,7 @@ async function render(){
     <div class="toprow-tabs">
       <div class="toprow-tab ${state.view==='log'?'active':''}" data-view="log">Log</div>
       <div class="toprow-tab ${state.view.startsWith('progress')?'active':''}" data-view="progress">Progress</div>
+      <div class="toprow-tab ${state.view==='meals'?'active':''}" data-view="meals">Meals</div>
     </div>
   `;
 
@@ -541,13 +676,16 @@ async function render(){
       <div class="day-title display" style="font-size:26px; margin-top:4px;">${state.progressExercise.name}</div>
       <div id="progressBody"><div class="loading-dot">Loading history…</div></div>
     </main>`;
+  } else if(state.view === 'meals'){
+    html += `<main><div id="mealsBody"><div class="loading-dot">Loading meals…</div></div></main>`;
   }
 
   app.innerHTML = html;
 
   document.querySelectorAll('.toprow-tab').forEach(el => {
     el.onclick = () => {
-      state.view = el.dataset.view === 'progress' ? 'progress' : 'log';
+      const v = el.dataset.view;
+      state.view = (v === 'progress' || v === 'meals') ? v : 'log';
       render();
     };
   });
@@ -584,6 +722,73 @@ async function render(){
   if(state.view === 'progress-detail'){
     renderProgressDetail();
   }
+  if(state.view === 'meals'){
+    renderMealsView();
+  }
+}
+
+async function renderMealsView(){
+  const container = document.getElementById('mealsBody');
+  if(!container) return;
+  const phase = getPhaseForWeek(state.currentWeek);
+  const dateKey = todayKey();
+  const eaten = await loadMealStatus(dateKey);
+  const permission = ('Notification' in window) ? Notification.permission : 'unsupported';
+
+  let notifBanner = '';
+  if(permission === 'unsupported'){
+    notifBanner = `<div class="notif-banner warn">Notifications aren't supported in this browser. Use iPhone Reminders as a backup for alerts.</div>`;
+  } else if(permission === 'granted'){
+    notifBanner = `<div class="notif-banner ok">Reminders are ON — you'll get a nudge if a meal window passes and isn't checked off (while this app is open).</div>`;
+  } else if(permission === 'denied'){
+    notifBanner = `<div class="notif-banner warn">Notifications are blocked. Enable them for this site in your browser settings to get alerts.</div>`;
+  } else {
+    notifBanner = `<div class="notif-banner">
+      <div style="margin-bottom:10px;">Turn on meal reminders so you get nudged if you miss a window.</div>
+      <button class="save-btn" id="enableNotifBtn" style="padding:11px;">Enable Reminders</button>
+    </div>`;
+  }
+
+  const doneCount = phase.meals.filter(m => eaten[m.name]).length;
+
+  container.innerHTML = `
+    <div class="day-title display" style="font-size:28px;">${phase.label}</div>
+    <div class="day-sub">${doneCount}/${phase.meals.length} meals logged today</div>
+    ${notifBanner}
+    <div style="margin-top:6px;">
+      ${phase.meals.map(m => `
+        <div class="meal-card ${eaten[m.name]?'done':''}" data-meal="${m.name}">
+          <div class="meal-check">${eaten[m.name] ? '✓' : ''}</div>
+          <div class="meal-info">
+            <div class="meal-top"><span class="meal-name">${m.name}</span><span class="meal-time">${m.time}</span></div>
+            <div class="meal-detail">${m.detail}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div style="font-size:11.5px; color:var(--ink-faint); margin-top:14px; line-height:1.5;">
+      Reminders fire only while this app/tab is open on your phone — for guaranteed alerts even when it's closed, also set matching alarms in your iPhone's Reminders or Clock app at the times above.
+    </div>
+  `;
+
+  const enableBtn = document.getElementById('enableNotifBtn');
+  if(enableBtn){
+    enableBtn.onclick = async () => {
+      const result = await Notification.requestPermission();
+      if(result === 'granted') startMealReminderLoop();
+      renderMealsView();
+    };
+  }
+
+  container.querySelectorAll('.meal-card').forEach(card => {
+    card.onclick = async () => {
+      const name = card.dataset.meal;
+      const status = await loadMealStatus(dateKey);
+      status[name] = !status[name];
+      await saveMealStatus(dateKey, status);
+      renderMealsView();
+    };
+  });
 }
 
 async function renderProgressList(){
@@ -844,6 +1049,9 @@ async function renderProgressDetail(){
     await ensureDayDataLoaded();
   }
   render();
+  if('Notification' in window && Notification.permission === 'granted'){
+    startMealReminderLoop();
+  }
 })();
 </script>
 </body>
