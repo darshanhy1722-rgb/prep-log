@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Prep Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#121316;
+    --surface:#1B1D21;
+    --surface-2:#212327;
+    --border:#2B2D32;
+    --ink:#EDEBE6;
+    --ink-dim:#8B8D93;
+    --ink-faint:#5B5D63;
+    --accent:#E8442C;
+    --accent-dim:#4A2620;
+    --good:#3ECF8E;
+    --plate:#3A3D44;
+    --radius:14px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    font-variant-numeric: tabular-nums;
+    padding-bottom:90px;
+    min-height:100vh;
+  }
+  .display{font-family:'Bebas Neue',sans-serif; letter-spacing:0.02em;}
+
+  /* Header */
+  header{
+    position:sticky; top:0; z-index:20;
+    background:linear-gradient(180deg, var(--bg) 80%, transparent);
+    padding:18px 18px 6px;
+  }
+  .headrow{display:flex; align-items:center; justify-content:space-between; gap:12px;}
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand h1{font-size:26px; margin:0; line-height:1;}
+  .brand .sub{font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;}
+  .week-badge{
+    width:52px; height:52px; border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, var(--surface-2), var(--plate));
+    border:3px solid var(--ink-faint);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    flex-shrink:0; cursor:pointer;
+  }
+  .week-badge .n{font-family:'Bebas Neue'; font-size:20px; line-height:1;}
+  .week-badge .l{font-size:8px; color:var(--ink-dim); text-transform:uppercase;}
+
+  /* Day tabs */
+  .daytabs{
+    display:flex; gap:8px; overflow-x:auto; padding:14px 18px 4px;
+    scrollbar-width:none;
+  }
+  .daytabs::-webkit-scrollbar{display:none;}
+  .daytab{
+    flex-shrink:0;
+    padding:9px 14px;
+    border-radius:20px;
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--ink-dim);
+    font-size:13px; font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .daytab.active{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+  }
+
+  main{padding:6px 18px 20px;}
+
+  .day-title{margin:14px 0 2px; font-size:32px;}
+  .day-sub{color:var(--ink-dim); font-size:13px; margin-bottom:16px;}
+
+  .ex-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:14px 14px 10px;
+    margin-bottom:12px;
+  }
+  .ex-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:2px;}
+  .ex-name{font-weight:700; font-size:15px;}
+  .ex-target{font-size:11px; color:var(--ink-faint); font-weight:600;}
+  .ex-hint{font-size:11px; color:var(--ink-dim); margin-bottom:10px;}
+
+  .set-row{
+    display:grid;
+    grid-template-columns: 28px 1fr 1fr 30px;
+    gap:8px;
+    align-items:center;
+    margin-bottom:6px;
+  }
+  .set-num{color:var(--ink-faint); font-size:12px; font-weight:700; text-align:center;}
+  .set-row input[type=number]{
+    width:100%;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    color:var(--ink);
+    font-size:15px;
+    font-weight:600;
+    padding:9px 6px;
+    text-align:center;
+  }
+  .set-row input[type=number]:focus{outline:none; border-color:var(--accent);}
+  .set-check{
+    width:22px; height:22px; border-radius:50%;
+    border:2px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; color:var(--good);
+    cursor:pointer;
+  }
+  .set-check.on{border-color:var(--good); background:rgba(62,207,142,0.12);}
+  .col-labels{display:grid; grid-template-columns: 28px 1fr 1fr 30px; gap:8px; margin-bottom:6px;}
+  .col-labels span{font-size:10px; color:var(--ink-faint); text-align:center; text-transform:uppercase; letter-spacing:0.05em;}
+
+  .save-bar{
+    position:fixed; bottom:0; left:0; right:0;
+    padding:14px 18px calc(14px + env(safe-area-inset-bottom));
+    background:linear-gradient(0deg, var(--bg) 60%, transparent);
+    z-index:20;
+  }
+  .save-btn{
+    width:100%;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    padding:15px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .save-btn:active{transform:scale(0.98);}
+  .save-btn.saved{background:var(--good);}
+
+  /* Progress tab */
+  .ex-list-item{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 4px; border-bottom:1px solid var(--border);
+    cursor:pointer;
+  }
+  .ex-list-item .name{font-weight:600; font-size:14px;}
+  .ex-list-item .day-tag{font-size:10px; color:var(--ink-faint); text-transform:uppercase;}
+  .ex-list-item .arrow{color:var(--ink-faint);}
+
+  .chart-wrap{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin:14px 0;}
+  .pr-tag{
+    display:inline-block; background:var(--accent-dim); color:var(--accent);
+    font-size:11px; font-weight:700; padding:3px 8px; border-radius:6px; margin-left:8px;
+  }
+  .back-btn{
+    background:none; border:none; color:var(--ink-dim); font-size:14px; font-weight:600;
+    padding:4px 0; margin-bottom:6px; cursor:pointer; display:flex; align-items:center; gap:4px;
+  }
+  .hist-table{width:100%; border-collapse:collapse; margin-top:10px;}
+  .hist-table th{font-size:10px; text-transform:uppercase; color:var(--ink-faint); text-align:left; padding:6px 4px; border-bottom:1px solid var(--border);}
+  .hist-table td{font-size:13px; padding:8px 4px; border-bottom:1px solid var(--border); font-weight:600;}
+  .hist-table td.wk{color:var(--ink-dim); font-weight:500;}
+
+  .empty-state{text-align:center; padding:40px 20px; color:var(--ink-dim);}
+  .empty-state .display{font-size:22px; color:var(--ink); margin-bottom:6px;}
+
+  /* Onboarding modal */
+  .modal-bg{
+    position:fixed; inset:0; background:rgba(0,0,0,0.7);
+    display:flex; align-items:center; justify-content:center; z-index:100; padding:24px;
+  }
+  .modal{background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px; max-width:340px; width:100%;}
+  .modal h2{font-size:24px; margin:0 0 8px;}
+  .modal p{font-size:13px; color:var(--ink-dim); line-height:1.5; margin-bottom:16px;}
+  .modal input[type=date]{
+    width:100%; background:var(--surface-2); border:1px solid var(--border); border-radius:10px;
+    color:var(--ink); padding:12px; font-size:14px; margin-bottom:16px;
+  }
+  .modal-btn{
+    width:100%; background:var(--accent); color:#fff; border:none; border-radius:10px;
+    padding:13px; font-weight:700; font-size:14px; cursor:pointer;
+  }
+  .loading-dot{
+    display:flex; justify-content:center; padding:40px; color:var(--ink-faint); font-size:13px;
+  }
+  .toprow-tabs{display:flex; gap:6px; padding:0 18px;}
+  .toprow-tab{
+    flex:1; text-align:center; padding:10px; font-size:12px; font-weight:700;
+    color:var(--ink-dim); border-bottom:2px solid var(--border); cursor:pointer; text-transform:uppercase; letter-spacing:0.04em;
+  }
+  .toprow-tab.active{color:var(--ink); border-bottom-color:var(--accent);}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="loading-dot">Loading your log…</div>
+</div>
+
+<script>
+const DAYS = {
+  push: { label:"Push", sub:"Chest / Shoulders / Triceps", exercises:[
+    {name:"Incline DB Press", sets:4, reps:"6-10"},
+    {name:"Flat DB Press", sets:3, reps:"8-12"},
+    {name:"Seated DB Shoulder Press", sets:4, reps:"8-10"},
+    {name:"Cable Lateral Raise", sets:4, reps:"12-15"},
+    {name:"Cable Fly (high-to-low)", sets:3, reps:"12-15"},
+    {name:"Tricep Pushdown", sets:3, reps:"12-15"},
+    {name:"Overhead Tricep Extension", sets:3, reps:"10-12"},
+  ]},
+  pull: { label:"Pull", sub:"Back / Biceps", exercises:[
+    {name:"Weighted Pull-up / Lat Pulldown", sets:4, reps:"6-10"},
+    {name:"Barbell / T-Bar Row", sets:4, reps:"8-10"},
+    {name:"Seated Cable Row", sets:3, reps:"10-12"},
+    {name:"Straight-Arm Pulldown", sets:3, reps:"12-15"},
+    {name:"Rear Delt Fly", sets:3, reps:"15"},
+    {name:"Barbell Curl", sets:3, reps:"8-10"},
+    {name:"Incline DB Curl", sets:3, reps:"10-12"},
+  ]},
+  legsA: { label:"Legs A", sub:"Quad Focus", exercises:[
+    {name:"Back Squat", sets:4, reps:"6-8"},
+    {name:"Leg Press", sets:4, reps:"10-12"},
+    {name:"Walking Lunges", sets:3, reps:"12/leg"},
+    {name:"Leg Extension", sets:3, reps:"15"},
+    {name:"Calf Raise", sets:4, reps:"15-20"},
+  ]},
+  upper: { label:"Upper", sub:"Delts / Arms Priority", exercises:[
+    {name:"Standing DB Shoulder Press", sets:4, reps:"8-10"},
+    {name:"Cable Lateral Raise", sets:4, reps:"12-15"},
+    {name:"Rear Delt Cable Fly", sets:3, reps:"15"},
+    {name:"Close-Grip Bench Press", sets:3, reps:"8-10"},
+    {name:"Preacher Curl", sets:3, reps:"10-12"},
+    {name:"Rope Tricep Pushdown", sets:3, reps:"12-15"},
+    {name:"Hammer Curl", sets:3, reps:"12"},
+  ]},
+  legsB: { label:"Legs B", sub:"Hamstring / Glute Focus", exercises:[
+    {name:"Romanian Deadlift", sets:4, reps:"8-10"},
+    {name:"Hip Thrust", sets:4, reps:"10-12"},
+    {name:"Leg Curl", sets:4, reps:"12-15"},
+    {name:"Bulgarian Split Squat", sets:3, reps:"10/leg"},
+    {name:"Standing Calf Raise", sets:4, reps:"15-20"},
+  ]},
+};
+const DAY_KEYS = Object.keys(DAYS);
+
+let state = {
+  profile: null,
+  currentDay: 'push',
+  currentWeek: 1,
+  view: 'log', // 'log' | 'progress' | 'progress-detail'
+  progressExercise: null, // {day, name}
+  dayData: {}, // exercises -> sets entered for current day+week
+  saving: false,
+};
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+function weekFromStart(startDate){
+  const start = new Date(startDate);
+  const now = new Date();
+  const diffDays = Math.floor((now - start) / 86400000);
+  return Math.max(1, Math.floor(diffDays/7) + 1);
+}
+
+async function loadProfile(){
+  try{
+    const res = await window.storage.get('profile', false);
+    return res ? JSON.parse(res.value) : null;
+  }catch(e){ return null; }
+}
+
+async function saveProfile(p){
+  try{ await window.storage.set('profile', JSON.stringify(p), false); }catch(e){ console.error(e); }
+}
+
+function logKey(day, week){ return `log:${day}:w${week}`; }
+
+async function loadDayLog(day, week){
+  try{
+    const res = await window.storage.get(logKey(day, week), false);
+    return res ? JSON.parse(res.value) : null;
+  }catch(e){ return null; }
+}
+
+async function saveDayLog(day, week, data){
+  try{
+    await window.storage.set(logKey(day, week), JSON.stringify(data), false);
+    return true;
+  }catch(e){ console.error(e); return false; }
+}
+
+async function loadAllLogsForDay(day){
+  // returns array of {week, data}
+  try{
+    const listRes = await window.storage.list(`log:${day}:w`, false);
+    if(!listRes || !listRes.keys) return [];
+    const results = await Promise.all(listRes.keys.map(async k => {
+      try{
+        const r = await window.storage.get(k, false);
+        if(!r) return null;
+        const week = parseInt(k.split(':w')[1], 10);
+        return { week, data: JSON.parse(r.value) };
+      }catch(e){ return null; }
+    }));
+    return results.filter(Boolean).sort((a,b)=>a.week-b.week);
+  }catch(e){ return []; }
+}
+
+function initDayData(day){
+  const d = {};
+  DAYS[day].exercises.forEach(ex => {
+    d[ex.name] = Array.from({length: ex.sets}, () => ({ weight:'', reps:'', done:false }));
+  });
+  return d;
+}
+
+async function ensureDayDataLoaded(){
+  const existing = await loadDayLog(state.currentDay, state.currentWeek);
+  const fresh = initDayData(state.currentDay);
+  if(existing && existing.exercises){
+    existing.exercises.forEach(savedEx => {
+      if(fresh[savedEx.name]){
+        savedEx.sets.forEach((s, i) => {
+          if(fresh[savedEx.name][i]) fresh[savedEx.name][i] = { weight:s.weight||'', reps:s.reps||'', done: !!(s.weight && s.reps) };
+        });
+      }
+    });
+  }
+  state.dayData = fresh;
+}
+
+async function getPrevWeekTop(day, week, exName){
+  for(let w = week-1; w >= 1; w--){
+    const log = await loadDayLog(day, w);
+    if(log && log.exercises){
+      const ex = log.exercises.find(e => e.name === exName);
+      if(ex && ex.sets && ex.sets.length){
+        const withWeight = ex.sets.filter(s => s.weight);
+        if(withWeight.length){
+          const top = withWeight.reduce((a,b)=> (parseFloat(b.weight)>parseFloat(a.weight)?b:a));
+          return { weight: top.weight, reps: top.reps, week: w };
+        }
+      }
+    }
+  }
+  return null;
+}
+
+async function render(){
+  const app = document.getElementById('app');
+
+  if(!state.profile){
+    app.innerHTML = `
+      <div class="modal-bg">
+        <div class="modal">
+          <h2 class="display">Set your start date</h2>
+          <p>This is the date you began (or begin) week 1 of prep. Your week number updates automatically from here.</p>
+          <input type="date" id="startDateInput" value="${todayStr()}">
+          <button class="modal-btn" id="startBtn">Start Tracking</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('startBtn').onclick = async () => {
+      const val = document.getElementById('startDateInput').value || todayStr();
+      state.profile = { startDate: val };
+      await saveProfile(state.profile);
+      state.currentWeek = weekFromStart(val);
+      await ensureDayDataLoaded();
+      render();
+    };
+    return;
+  }
+
+  const weekNow = weekFromStart(state.profile.startDate);
+
+  let html = `
+    <header>
+      <div class="headrow">
+        <div class="brand">
+          <div>
+            <h1 class="display">PREP LOG</h1>
+            <div class="sub">Men's Physique · Mumbai</div>
+          </div>
+        </div>
+        <div class="week-badge" id="weekBadge" title="Tap to change week">
+          <div class="n">${state.currentWeek}</div>
+          <div class="l">Week</div>
+        </div>
+      </div>
+    </header>
+    <div class="toprow-tabs">
+      <div class="toprow-tab ${state.view==='log'?'active':''}" data-view="log">Log</div>
+      <div class="toprow-tab ${state.view.startsWith('progress')?'active':''}" data-view="progress">Progress</div>
+    </div>
+  `;
+
+  if(state.view === 'log'){
+    html += `<div class="daytabs">`;
+    DAY_KEYS.forEach(k => {
+      html += `<div class="daytab ${state.currentDay===k?'active':''}" data-day="${k}">${DAYS[k].label}</div>`;
+    });
+    html += `</div>`;
+
+    const day = DAYS[state.currentDay];
+    html += `<main>
+      <div class="day-title display">${day.label}</div>
+      <div class="day-sub">${day.sub} — Week ${state.currentWeek}</div>
+      <div id="exCards"></div>
+    </main>
+    <div class="save-bar">
+      <button class="save-btn" id="saveBtn">Save This Session</button>
+    </div>`;
+  } else if(state.view === 'progress'){
+    html += `<main><div style="margin-top:8px;">`;
+    DAY_KEYS.forEach(dayKey => {
+      html += `<div style="margin-bottom:4px; margin-top:14px; font-size:11px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.06em;">${DAYS[dayKey].label}</div>`;
+      DAYS[dayKey].exercises.forEach(ex => {
+        html += `<div class="ex-list-item" data-day="${dayKey}" data-name="${ex.name}">
+          <div>
+            <div class="name">${ex.name}</div>
+          </div>
+          <div class="arrow">›</div>
+        </div>`;
+      });
+    });
+    html += `</div></main>`;
+  } else if(state.view === 'progress-detail'){
+    html += `<main>
+      <button class="back-btn" id="backBtn">‹ Back to list</button>
+      <div class="day-title display" style="font-size:24px; margin-top:4px;">${state.progressExercise.name}</div>
+      <div id="progressBody"><div class="loading-dot">Loading history…</div></div>
+    </main>`;
+  }
+
+  app.innerHTML = html;
+
+  // wire tab switches
+  document.querySelectorAll('.toprow-tab').forEach(el => {
+    el.onclick = () => {
+      state.view = el.dataset.view === 'progress' ? 'progress' : 'log';
+      render();
+    };
+  });
+
+  const badge = document.getElementById('weekBadge');
+  if(badge){
+    badge.onclick = async () => {
+      const input = prompt('Set week number to log/view:', state.currentWeek);
+      const num = parseInt(input, 10);
+      if(num && num > 0){
+        state.currentWeek = num;
+        await ensureDayDataLoaded();
+        render();
+      }
+    };
+  }
+
+  if(state.view === 'log'){
+    document.querySelectorAll('.daytab').forEach(el => {
+      el.onclick = async () => {
+        state.currentDay = el.dataset.day;
+        await ensureDayDataLoaded();
+        render();
+      };
+    });
+    await ensureDayDataLoaded();
+    renderExerciseCards();
+    const saveBtn = document.getElementById('saveBtn');
+    saveBtn.onclick = handleSave;
+  }
+
+  if(state.view === 'progress'){
+    document.querySelectorAll('.ex-list-item').forEach(el => {
+      el.onclick = () => {
+        state.progressExercise = { day: el.dataset.day, name: el.dataset.name };
+        state.view = 'progress-detail';
+        render();
+      };
+    });
+  }
+
+  if(state.view === 'progress-detail'){
+    renderProgressDetail();
+  }
+}
+
+async function renderExerciseCards(){
+  const container = document.getElementById('exCards');
+  if(!container) return;
+  const day = DAYS[state.currentDay];
+  let html = '';
+  const hints = {};
+  for(const ex of day.exercises){
+    hints[ex.name] = await getPrevWeekTop(state.currentDay, state.currentWeek, ex.name);
+  }
+
+  day.exercises.forEach(ex => {
+    const hint = hints[ex.name];
+    html += `<div class="ex-card" data-ex="${ex.name}">
+      <div class="ex-head">
+        <div class="ex-name">${ex.name}</div>
+        <div class="ex-target">${ex.sets}×${ex.reps}</div>
+      </div>
+      <div class="ex-hint">${hint ? `Last: ${hint.weight}kg × ${hint.reps} (wk ${hint.week})` : 'No previous data yet'}</div>
+      <div class="col-labels"><span></span><span>Weight kg</span><span>Reps</span><span></span></div>
+      ${state.dayData[ex.name].map((s, i) => `
+        <div class="set-row" data-ex="${ex.name}" data-set="${i}">
+          <div class="set-num">${i+1}</div>
+          <input type="number" inputmode="decimal" placeholder="0" class="w-input" value="${s.weight}">
+          <input type="number" inputmode="numeric" placeholder="0" class="r-input" value="${s.reps}">
+          <div class="set-check ${s.done?'on':''}">✓</div>
+        </div>
+      `).join('')}
+    </div>`;
+  });
+  container.innerHTML = html;
+
+  container.querySelectorAll('.ex-card').forEach(card => {
+    const exName = card.dataset.ex;
+    card.querySelectorAll('.set-row').forEach(row => {
+      const idx = parseInt(row.dataset.set, 10);
+      const wInput = row.querySelector('.w-input');
+      const rInput = row.querySelector('.r-input');
+      const check = row.querySelector('.set-check');
+      const sync = () => {
+        state.dayData[exName][idx].weight = wInput.value;
+        state.dayData[exName][idx].reps = rInput.value;
+        const done = !!(wInput.value && rInput.value);
+        state.dayData[exName][idx].done = done;
+        check.classList.toggle('on', done);
+      };
+      wInput.oninput = sync;
+      rInput.oninput = sync;
+    });
+  });
+}
+
+async function handleSave(){
+  const btn = document.getElementById('saveBtn');
+  btn.textContent = 'Saving…';
+  const day = DAYS[state.currentDay];
+  const payload = {
+    date: todayStr(),
+    exercises: day.exercises.map(ex => ({
+      name: ex.name,
+      sets: state.dayData[ex.name].map(s => ({ weight: s.weight, reps: s.reps }))
+    }))
+  };
+  const ok = await saveDayLog(state.currentDay, state.currentWeek, payload);
+  btn.textContent = ok ? 'Saved ✓' : 'Save failed — try again';
+  btn.classList.toggle('saved', ok);
+  setTimeout(() => {
+    btn.textContent = 'Save This Session';
+    btn.classList.remove('saved');
+  }, 1800);
+}
+
+async function renderProgressDetail(){
+  const body = document.getElementById('progressBody');
+  const { day, name } = state.progressExercise;
+  const logs = await loadAllLogsForDay(day);
+  const points = [];
+  logs.forEach(({week, data}) => {
+    const ex = data.exercises && data.exercises.find(e => e.name === name);
+    if(ex){
+      const withWeight = ex.sets.filter(s => s.weight && s.reps);
+      if(withWeight.length){
+        const top = withWeight.reduce((a,b)=> (parseFloat(b.weight)>parseFloat(a.weight)?b:a));
+        points.push({ week, weight: parseFloat(top.weight), reps: top.reps });
+      }
+    }
+  });
+
+  if(points.length === 0){
+    body.innerHTML = `<div class="empty-state">
+      <div class="display">No sets logged yet</div>
+      <div>Log this exercise from the Log tab to start tracking it here.</div>
+    </div>`;
+    return;
+  }
+
+  const maxW = Math.max(...points.map(p=>p.weight));
+  const minW = Math.min(...points.map(p=>p.weight));
+  const range = maxW - minW || 1;
+  const W = 300, H = 120, pad = 10;
+  const stepX = points.length > 1 ? (W - pad*2) / (points.length - 1) : 0;
+  const coords = points.map((p, i) => {
+    const x = pad + i * stepX;
+    const y = H - pad - ((p.weight - minW) / range) * (H - pad*2);
+    return { x, y, p };
+  });
+  const pathD = coords.map((c,i) => (i===0?'M':'L') + c.x.toFixed(1) + ',' + c.y.toFixed(1)).join(' ');
+  const isPR = points[points.length-1].weight === maxW;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="140" style="overflow:visible;">
+    <path d="${pathD}" fill="none" stroke="#E8442C" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${coords.map(c => `<circle cx="${c.x}" cy="${c.y}" r="3.5" fill="#EDEBE6"/>`).join('')}
+  </svg>`;
+
+  let rows = points.slice().reverse().map(p => `
+    <tr><td class="wk">Wk ${p.week}</td><td>${p.weight}kg</td><td>${p.reps} reps</td></tr>
+  `).join('');
+
+  body.innerHTML = `
+    <div class="chart-wrap">
+      <div style="font-size:12px; color:var(--ink-dim); margin-bottom:8px;">Top set weight by week ${isPR ? '<span class="pr-tag">PR</span>' : ''}</div>
+      ${svg}
+    </div>
+    <table class="hist-table">
+      <thead><tr><th>Week</th><th>Weight</th><th>Reps</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+  document.getElementById('backBtn').onclick = () => { state.view = 'progress'; render(); };
+}
+
+(async function init(){
+  state.profile = await loadProfile();
+  if(state.profile){
+    state.currentWeek = weekFromStart(state.profile.startDate);
+    await ensureDayDataLoaded();
+  }
+  render();
+})();
+</script>
+</body>
+</html>

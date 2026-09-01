@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Prep Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#101114;
+    --bg-2:#16171B;
+    --surface:#1C1E23;
+    --surface-2:#232529;
+    --border:#2C2E34;
+    --ink:#F1EFEA;
+    --ink-dim:#93959C;
+    --ink-faint:#5B5D64;
+    --accent:#FF5A36;
+    --accent-2:#FF8A5C;
+    --accent-dim:rgba(255,90,54,0.14);
+    --good:#3ED598;
+    --good-dim:rgba(62,213,152,0.14);
+    --push:#FF5A36;
+    --pull:#3E8BFF;
+    --legsA:#3ED598;
+    --upper:#C77DFF;
+    --legsB:#2FD1D1;
+    --radius:16px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    font-variant-numeric: tabular-nums;
+    padding-bottom:96px;
+    min-height:100vh;
+  }
+  .display{font-family:'Bebas Neue',sans-serif; letter-spacing:0.02em;}
+
+  /* subtle grain */
+  #grain{
+    position:fixed; inset:0; pointer-events:none; opacity:0.035; z-index:0; mix-blend-mode:overlay;
+  }
+
+  /* HERO */
+  .hero{
+    position:relative;
+    padding:22px 18px 18px;
+    background:
+      radial-gradient(120% 90% at 15% -10%, rgba(255,90,54,0.16), transparent 55%),
+      linear-gradient(180deg, var(--bg-2), var(--bg));
+    border-bottom:1px solid var(--border);
+    overflow:hidden;
+  }
+  .bar-motif{
+    display:flex; align-items:center; gap:6px; margin-bottom:14px; opacity:0.9;
+  }
+  .plate{width:14px; height:22px; border-radius:3px; background:var(--ink-faint);}
+  .plate.big{width:18px; height:28px;}
+  .bar-line{flex:1; height:4px; background:var(--ink-faint); border-radius:2px;}
+  .hero-row{display:flex; align-items:center; justify-content:space-between; gap:14px;}
+  .hero-title h1{font-size:34px; margin:0; line-height:0.9;}
+  .hero-title .sub{font-size:11.5px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.1em; margin-top:5px;}
+  .ring-wrap{position:relative; width:76px; height:76px; flex-shrink:0; cursor:pointer;}
+  .ring-wrap svg{transform:rotate(-90deg);}
+  .ring-center{
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  }
+  .ring-center .n{font-family:'Bebas Neue'; font-size:24px; line-height:1;}
+  .ring-center .l{font-size:8px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.05em;}
+
+  .hero-stats{display:flex; gap:10px; margin-top:16px;}
+  .stat-pill{
+    flex:1; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:10px 12px;
+  }
+  .stat-pill .v{font-family:'Bebas Neue'; font-size:22px; line-height:1; color:var(--ink);}
+  .stat-pill .k{font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.06em; margin-top:2px;}
+  .stat-pill.accent .v{color:var(--accent-2);}
+
+  /* Tabs */
+  .toprow-tabs{display:flex; gap:0; padding:0 18px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--bg); z-index:15;}
+  .toprow-tab{
+    flex:1; text-align:center; padding:13px 8px; font-size:12.5px; font-weight:700;
+    color:var(--ink-dim); border-bottom:2px solid transparent; cursor:pointer; text-transform:uppercase; letter-spacing:0.05em;
+    transition:color 0.15s;
+  }
+  .toprow-tab.active{color:var(--ink); border-bottom-color:var(--accent);}
+
+  /* Day chips */
+  .daytabs{
+    display:flex; gap:8px; overflow-x:auto; padding:16px 18px 4px;
+    scrollbar-width:none;
+  }
+  .daytabs::-webkit-scrollbar{display:none;}
+  .daytab{
+    flex-shrink:0;
+    padding:9px 15px 9px 11px;
+    border-radius:22px;
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--ink-dim);
+    font-size:13px; font-weight:700;
+    cursor:pointer;
+    white-space:nowrap;
+    display:flex; align-items:center; gap:7px;
+    transition:all 0.15s;
+  }
+  .daytab .dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
+  .daytab.active{
+    background:var(--surface-2);
+    border-color:var(--dc);
+    color:var(--ink);
+    box-shadow: 0 0 0 1px var(--dc) inset;
+  }
+
+  main{padding:6px 18px 20px; position:relative; z-index:1;}
+
+  .day-title{margin:16px 0 2px; font-size:34px; display:flex; align-items:center; gap:10px;}
+  .day-title .dot-lg{width:12px; height:12px; border-radius:50%;}
+  .day-sub{color:var(--ink-dim); font-size:13px; margin-bottom:18px;}
+
+  .ex-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:15px 15px 11px;
+    margin-bottom:12px;
+    transition:border-color 0.25s, box-shadow 0.25s;
+  }
+  .ex-card.complete{
+    border-color:rgba(62,213,152,0.4);
+    box-shadow: 0 0 0 1px rgba(62,213,152,0.15) inset;
+  }
+  .ex-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:2px;}
+  .ex-name{font-weight:700; font-size:15px;}
+  .ex-target{font-size:11px; color:var(--ink-faint); font-weight:700; background:var(--surface-2); padding:3px 8px; border-radius:6px;}
+  .ex-hint{font-size:11.5px; color:var(--ink-dim); margin-bottom:12px; display:flex; align-items:center; gap:5px;}
+  .ex-hint .ico{color:var(--accent-2);}
+
+  .set-row{
+    display:grid;
+    grid-template-columns: 26px 1fr 1fr 32px;
+    gap:8px;
+    align-items:center;
+    margin-bottom:7px;
+  }
+  .set-num{color:var(--ink-faint); font-size:12px; font-weight:800; text-align:center;}
+  .set-row input[type=number]{
+    width:100%;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:9px;
+    color:var(--ink);
+    font-size:16px;
+    font-weight:700;
+    padding:10px 6px;
+    text-align:center;
+    transition:border-color 0.15s;
+  }
+  .set-row input[type=number]:focus{outline:none; border-color:var(--accent);}
+  .set-check{
+    width:24px; height:24px; border-radius:50%;
+    border:2px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; color:transparent;
+    cursor:pointer;
+    transition:all 0.2s cubic-bezier(.34,1.56,.64,1);
+  }
+  .set-check.on{border-color:var(--good); background:var(--good-dim); color:var(--good); transform:scale(1.05);}
+  .col-labels{display:grid; grid-template-columns: 26px 1fr 1fr 32px; gap:8px; margin-bottom:7px;}
+  .col-labels span{font-size:9.5px; color:var(--ink-faint); text-align:center; text-transform:uppercase; letter-spacing:0.06em;}
+
+  .save-bar{
+    position:fixed; bottom:0; left:0; right:0;
+    padding:14px 18px calc(14px + env(safe-area-inset-bottom));
+    background:linear-gradient(0deg, var(--bg) 55%, transparent);
+    z-index:20;
+  }
+  .save-btn{
+    width:100%;
+    background:linear-gradient(135deg, var(--accent), #E8442C);
+    color:#fff;
+    border:none;
+    border-radius:14px;
+    padding:16px;
+    font-size:15px;
+    font-weight:800;
+    cursor:pointer;
+    letter-spacing:0.02em;
+    box-shadow: 0 6px 20px -6px rgba(255,90,54,0.5);
+    transition:transform 0.1s;
+  }
+  .save-btn:active{transform:scale(0.97);}
+  .save-btn.saved{background:linear-gradient(135deg, var(--good), #2FBE84); box-shadow:0 6px 20px -6px rgba(62,213,152,0.5);}
+
+  /* Progress tab */
+  .group-label{margin:18px 0 6px; font-size:11px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.08em; display:flex; align-items:center; gap:7px;}
+  .group-label .dot{width:8px; height:8px; border-radius:50%;}
+  .ex-list-item{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:13px 6px; border-bottom:1px solid var(--border);
+    cursor:pointer;
+    gap:10px;
+  }
+  .ex-list-item .name{font-weight:600; font-size:14px;}
+  .ex-list-item .meta{font-size:11px; color:var(--ink-faint); margin-top:2px;}
+  .ex-list-item .right{display:flex; align-items:center; gap:8px;}
+  .ex-list-item .arrow{color:var(--ink-faint);}
+  .spark{display:block;}
+
+  .chart-wrap{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; margin:14px 0;}
+  .pr-tag{
+    display:inline-flex; align-items:center; gap:4px; background:var(--accent-dim); color:var(--accent-2);
+    font-size:11px; font-weight:800; padding:4px 9px; border-radius:7px; margin-left:8px;
+  }
+  .back-btn{
+    background:none; border:none; color:var(--ink-dim); font-size:14px; font-weight:600;
+    padding:4px 0; margin-bottom:6px; cursor:pointer; display:flex; align-items:center; gap:4px;
+  }
+  .hist-table{width:100%; border-collapse:collapse; margin-top:12px;}
+  .hist-table th{font-size:10px; text-transform:uppercase; color:var(--ink-faint); text-align:left; padding:7px 4px; border-bottom:1px solid var(--border); letter-spacing:0.05em;}
+  .hist-table td{font-size:13.5px; padding:9px 4px; border-bottom:1px solid var(--border); font-weight:700;}
+  .hist-table td.wk{color:var(--ink-dim); font-weight:500;}
+
+  .empty-state{text-align:center; padding:50px 20px; color:var(--ink-dim);}
+  .empty-state .display{font-size:24px; color:var(--ink); margin-bottom:6px;}
+
+  /* Onboarding modal */
+  .modal-bg{
+    position:fixed; inset:0; background:rgba(10,10,12,0.82); backdrop-filter:blur(4px);
+    display:flex; align-items:center; justify-content:center; z-index:100; padding:24px;
+  }
+  .modal{background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:26px; max-width:340px; width:100%;}
+  .modal h2{font-size:26px; margin:0 0 8px;}
+  .modal p{font-size:13px; color:var(--ink-dim); line-height:1.5; margin-bottom:18px;}
+  .modal label{font-size:11px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.06em; display:block; margin-bottom:6px;}
+  .modal input{
+    width:100%; background:var(--surface-2); border:1px solid var(--border); border-radius:11px;
+    color:var(--ink); padding:12px; font-size:14px; margin-bottom:16px; font-weight:600;
+  }
+  .modal-btn{
+    width:100%; background:linear-gradient(135deg, var(--accent), #E8442C); color:#fff; border:none; border-radius:12px;
+    padding:14px; font-weight:800; font-size:14px; cursor:pointer;
+  }
+  .loading-dot{
+    display:flex; justify-content:center; padding:40px; color:var(--ink-faint); font-size:13px;
+  }
+  #confettiCanvas{position:fixed; inset:0; pointer-events:none; z-index:200;}
+  #prToast{
+    position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-60px);
+    background:var(--surface); border:1px solid var(--good); color:var(--ink);
+    padding:12px 18px; border-radius:12px; font-size:13px; font-weight:700; z-index:201;
+    box-shadow:0 10px 30px -8px rgba(0,0,0,0.5); transition:transform 0.35s cubic-bezier(.34,1.56,.64,1);
+    display:flex; align-items:center; gap:8px; white-space:nowrap;
+  }
+  #prToast.show{transform:translateX(-50%) translateY(0);}
+  #prToast .ico{color:var(--good); font-size:16px;}
+</style>
+</head>
+<body>
+
+<svg id="grain" width="100%" height="100%"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(#n)"/></svg>
+<canvas id="confettiCanvas"></canvas>
+<div id="prToast"><span class="ico">&#9679;</span><span id="prToastText">New PR!</span></div>
+
+<div id="app">
+  <div class="loading-dot">Loading your log…</div>
+</div>
+
+<script>
+const DAYS = {
+  push:  { label:"Push",   sub:"Chest / Shoulders / Triceps", color:"var(--push)",  exercises:[
+    {name:"Incline DB Press", sets:4, reps:"6-10"},
+    {name:"Flat DB Press", sets:3, reps:"8-12"},
+    {name:"Seated DB Shoulder Press", sets:4, reps:"8-10"},
+    {name:"Cable Lateral Raise", sets:4, reps:"12-15"},
+    {name:"Cable Fly (high-to-low)", sets:3, reps:"12-15"},
+    {name:"Tricep Pushdown", sets:3, reps:"12-15"},
+    {name:"Overhead Tricep Extension", sets:3, reps:"10-12"},
+  ]},
+  pull:  { label:"Pull",   sub:"Back / Biceps", color:"var(--pull)", exercises:[
+    {name:"Weighted Pull-up / Lat Pulldown", sets:4, reps:"6-10"},
+    {name:"Barbell / T-Bar Row", sets:4, reps:"8-10"},
+    {name:"Seated Cable Row", sets:3, reps:"10-12"},
+    {name:"Straight-Arm Pulldown", sets:3, reps:"12-15"},
+    {name:"Rear Delt Fly", sets:3, reps:"15"},
+    {name:"Barbell Curl", sets:3, reps:"8-10"},
+    {name:"Incline DB Curl", sets:3, reps:"10-12"},
+  ]},
+  legsA: { label:"Legs A", sub:"Quad Focus", color:"var(--legsA)", exercises:[
+    {name:"Back Squat", sets:4, reps:"6-8"},
+    {name:"Leg Press", sets:4, reps:"10-12"},
+    {name:"Walking Lunges", sets:3, reps:"12/leg"},
+    {name:"Leg Extension", sets:3, reps:"15"},
+    {name:"Calf Raise", sets:4, reps:"15-20"},
+  ]},
+  upper: { label:"Upper",  sub:"Delts / Arms Priority", color:"var(--upper)", exercises:[
+    {name:"Standing DB Shoulder Press", sets:4, reps:"8-10"},
+    {name:"Cable Lateral Raise", sets:4, reps:"12-15"},
+    {name:"Rear Delt Cable Fly", sets:3, reps:"15"},
+    {name:"Close-Grip Bench Press", sets:3, reps:"8-10"},
+    {name:"Preacher Curl", sets:3, reps:"10-12"},
+    {name:"Rope Tricep Pushdown", sets:3, reps:"12-15"},
+    {name:"Hammer Curl", sets:3, reps:"12"},
+  ]},
+  legsB: { label:"Legs B", sub:"Hamstring / Glute Focus", color:"var(--legsB)", exercises:[
+    {name:"Romanian Deadlift", sets:4, reps:"8-10"},
+    {name:"Hip Thrust", sets:4, reps:"10-12"},
+    {name:"Leg Curl", sets:4, reps:"12-15"},
+    {name:"Bulgarian Split Squat", sets:3, reps:"10/leg"},
+    {name:"Standing Calf Raise", sets:4, reps:"15-20"},
+  ]},
+};
+const DAY_KEYS = Object.keys(DAYS);
+
+let state = {
+  profile: null,
+  currentDay: 'push',
+  currentWeek: 1,
+  view: 'log',
+  progressExercise: null,
+  dayData: {},
+  weekCompletion: 0,
+};
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+function weekFromStart(startDate){
+  const start = new Date(startDate);
+  const now = new Date();
+  const diffDays = Math.floor((now - start) / 86400000);
+  return Math.max(1, Math.floor(diffDays/7) + 1);
+}
+
+// --- Storage layer: browser localStorage (persists on this device/browser only) ---
+const STORAGE_PREFIX = 'preplog:';
+
+async function loadProfile(){
+  try{ const raw = localStorage.getItem(STORAGE_PREFIX + 'profile'); return raw ? JSON.parse(raw) : null; }
+  catch(e){ return null; }
+}
+async function saveProfile(p){
+  try{ localStorage.setItem(STORAGE_PREFIX + 'profile', JSON.stringify(p)); }catch(e){ console.error(e); }
+}
+function logKey(day, week){ return `${STORAGE_PREFIX}log:${day}:w${week}`; }
+async function loadDayLog(day, week){
+  try{ const raw = localStorage.getItem(logKey(day, week)); return raw ? JSON.parse(raw) : null; }
+  catch(e){ return null; }
+}
+async function saveDayLog(day, week, data){
+  try{ localStorage.setItem(logKey(day, week), JSON.stringify(data)); return true; }
+  catch(e){ console.error(e); return false; }
+}
+async function loadAllLogsForDay(day){
+  try{
+    const prefix = `${STORAGE_PREFIX}log:${day}:w`;
+    const results = [];
+    for(let i = 0; i < localStorage.length; i++){
+      const k = localStorage.key(i);
+      if(k && k.startsWith(prefix)){
+        try{
+          const raw = localStorage.getItem(k);
+          if(!raw) continue;
+          const week = parseInt(k.split(':w')[1], 10);
+          results.push({ week, data: JSON.parse(raw) });
+        }catch(e){ /* skip bad entry */ }
+      }
+    }
+    return results.sort((a,b)=>a.week-b.week);
+  }catch(e){ return []; }
+}
+
+function initDayData(day){
+  const d = {};
+  DAYS[day].exercises.forEach(ex => {
+    d[ex.name] = Array.from({length: ex.sets}, () => ({ weight:'', reps:'', done:false }));
+  });
+  return d;
+}
+
+async function ensureDayDataLoaded(){
+  const existing = await loadDayLog(state.currentDay, state.currentWeek);
+  const fresh = initDayData(state.currentDay);
+  if(existing && existing.exercises){
+    existing.exercises.forEach(savedEx => {
+      if(fresh[savedEx.name]){
+        savedEx.sets.forEach((s, i) => {
+          if(fresh[savedEx.name][i]) fresh[savedEx.name][i] = { weight:s.weight||'', reps:s.reps||'', done: !!(s.weight && s.reps) };
+        });
+      }
+    });
+  }
+  state.dayData = fresh;
+}
+
+async function getPrevWeekTop(day, week, exName){
+  for(let w = week-1; w >= 1; w--){
+    const log = await loadDayLog(day, w);
+    if(log && log.exercises){
+      const ex = log.exercises.find(e => e.name === exName);
+      if(ex && ex.sets && ex.sets.length){
+        const withWeight = ex.sets.filter(s => s.weight);
+        if(withWeight.length){
+          const top = withWeight.reduce((a,b)=> (parseFloat(b.weight)>parseFloat(a.weight)?b:a));
+          return { weight: top.weight, reps: top.reps, week: w };
+        }
+      }
+    }
+  }
+  return null;
+}
+
+async function getWeekCompletion(week){
+  let count = 0;
+  for(const day of DAY_KEYS){
+    const log = await loadDayLog(day, week);
+    if(log && log.exercises && log.exercises.some(e => e.sets.some(s => s.weight && s.reps))) count++;
+  }
+  return count;
+}
+
+function ringSVG(pct, size=76, stroke=6){
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const offset = c * (1 - pct);
+  return `<svg width="${size}" height="${size}">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--border)" stroke-width="${stroke}"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--accent)" stroke-width="${stroke}"
+      stroke-dasharray="${c}" stroke-dashoffset="${offset}" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function sparklineSVG(points, w=64, h=24){
+  if(points.length < 2) return `<svg width="${w}" height="${h}"></svg>`;
+  const vals = points.map(p=>p.weight);
+  const max = Math.max(...vals), min = Math.min(...vals);
+  const range = (max - min) || 1;
+  const stepX = w / (points.length - 1);
+  const coords = points.map((p,i) => ({
+    x: i*stepX,
+    y: h - ((p.weight-min)/range) * (h-4) - 2
+  }));
+  const d = coords.map((c,i)=> (i===0?'M':'L')+c.x.toFixed(1)+','+c.y.toFixed(1)).join(' ');
+  return `<svg class="spark" width="${w}" height="${h}"><path d="${d}" fill="none" stroke="var(--accent-2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+async function render(){
+  const app = document.getElementById('app');
+
+  if(!state.profile){
+    app.innerHTML = `
+      <div class="modal-bg">
+        <div class="modal">
+          <h2 class="display">Start Your Prep</h2>
+          <p>Set your week 1 start date and how many weeks until show day. Your progress ring updates automatically from here.</p>
+          <label>Week 1 start date</label>
+          <input type="date" id="startDateInput" value="${todayStr()}">
+          <label>Total weeks to show</label>
+          <input type="number" id="totalWeeksInput" value="22" min="1" max="52">
+          <button class="modal-btn" id="startBtn">Start Tracking</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('startBtn').onclick = async () => {
+      const val = document.getElementById('startDateInput').value || todayStr();
+      const totalWeeks = parseInt(document.getElementById('totalWeeksInput').value, 10) || 22;
+      state.profile = { startDate: val, totalWeeks };
+      await saveProfile(state.profile);
+      state.currentWeek = weekFromStart(val);
+      await ensureDayDataLoaded();
+      render();
+    };
+    return;
+  }
+
+  const totalWeeks = state.profile.totalWeeks || 22;
+  const pct = Math.min(1, state.currentWeek / totalWeeks);
+  state.weekCompletion = await getWeekCompletion(state.currentWeek);
+
+  let html = `
+    <div class="hero">
+      <div class="bar-motif">
+        <div class="plate big"></div><div class="plate"></div>
+        <div class="bar-line"></div>
+        <div class="plate"></div><div class="plate big"></div>
+      </div>
+      <div class="hero-row">
+        <div class="hero-title">
+          <h1 class="display">PREP LOG</h1>
+          <div class="sub">Men's Physique · Mumbai</div>
+        </div>
+        <div class="ring-wrap" id="weekBadge" title="Tap to change week">
+          ${ringSVG(pct)}
+          <div class="ring-center"><div class="n">${state.currentWeek}</div><div class="l">of ${totalWeeks}</div></div>
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-pill accent">
+          <div class="v">${state.weekCompletion}/5</div>
+          <div class="k">Sessions this week</div>
+        </div>
+        <div class="stat-pill">
+          <div class="v">${totalWeeks - state.currentWeek}</div>
+          <div class="k">Weeks to show</div>
+        </div>
+      </div>
+    </div>
+    <div class="toprow-tabs">
+      <div class="toprow-tab ${state.view==='log'?'active':''}" data-view="log">Log</div>
+      <div class="toprow-tab ${state.view.startsWith('progress')?'active':''}" data-view="progress">Progress</div>
+    </div>
+  `;
+
+  if(state.view === 'log'){
+    html += `<div class="daytabs">`;
+    DAY_KEYS.forEach(k => {
+      html += `<div class="daytab ${state.currentDay===k?'active':''}" data-day="${k}" style="--dc:${DAYS[k].color}">
+        <span class="dot" style="background:${DAYS[k].color}"></span>${DAYS[k].label}
+      </div>`;
+    });
+    html += `</div>`;
+
+    const day = DAYS[state.currentDay];
+    html += `<main>
+      <div class="day-title display"><span class="dot-lg" style="background:${day.color}"></span>${day.label}</div>
+      <div class="day-sub">${day.sub} — Week ${state.currentWeek}</div>
+      <div id="exCards"></div>
+    </main>
+    <div class="save-bar">
+      <button class="save-btn" id="saveBtn">Save This Session</button>
+    </div>`;
+  } else if(state.view === 'progress'){
+    html += `<main><div id="progressList"><div class="loading-dot">Loading exercises…</div></div></main>`;
+  } else if(state.view === 'progress-detail'){
+    html += `<main>
+      <button class="back-btn" id="backBtn">‹ Back to list</button>
+      <div class="day-title display" style="font-size:26px; margin-top:4px;">${state.progressExercise.name}</div>
+      <div id="progressBody"><div class="loading-dot">Loading history…</div></div>
+    </main>`;
+  }
+
+  app.innerHTML = html;
+
+  document.querySelectorAll('.toprow-tab').forEach(el => {
+    el.onclick = () => {
+      state.view = el.dataset.view === 'progress' ? 'progress' : 'log';
+      render();
+    };
+  });
+
+  const badge = document.getElementById('weekBadge');
+  if(badge){
+    badge.onclick = async () => {
+      const input = prompt('Set week number to log/view:', state.currentWeek);
+      const num = parseInt(input, 10);
+      if(num && num > 0){
+        state.currentWeek = num;
+        await ensureDayDataLoaded();
+        render();
+      }
+    };
+  }
+
+  if(state.view === 'log'){
+    document.querySelectorAll('.daytab').forEach(el => {
+      el.onclick = async () => {
+        state.currentDay = el.dataset.day;
+        await ensureDayDataLoaded();
+        render();
+      };
+    });
+    await ensureDayDataLoaded();
+    renderExerciseCards();
+    document.getElementById('saveBtn').onclick = handleSave;
+  }
+
+  if(state.view === 'progress'){
+    renderProgressList();
+  }
+  if(state.view === 'progress-detail'){
+    renderProgressDetail();
+  }
+}
+
+async function renderProgressList(){
+  const container = document.getElementById('progressList');
+  let html = '';
+  for(const dayKey of DAY_KEYS){
+    const day = DAYS[dayKey];
+    html += `<div class="group-label"><span class="dot" style="background:${day.color}"></span>${day.label}</div>`;
+    const logs = await loadAllLogsForDay(dayKey);
+    for(const ex of day.exercises){
+      const points = [];
+      logs.forEach(({week, data}) => {
+        const found = data.exercises && data.exercises.find(e => e.name === ex.name);
+        if(found){
+          const withWeight = found.sets.filter(s => s.weight && s.reps);
+          if(withWeight.length){
+            const top = withWeight.reduce((a,b)=> (parseFloat(b.weight)>parseFloat(a.weight)?b:a));
+            points.push({ week, weight: parseFloat(top.weight) });
+          }
+        }
+      });
+      const last = points.length ? points[points.length-1].weight + 'kg' : '—';
+      html += `<div class="ex-list-item" data-day="${dayKey}" data-name="${ex.name}">
+        <div>
+          <div class="name">${ex.name}</div>
+          <div class="meta">${last}</div>
+        </div>
+        <div class="right">
+          ${sparklineSVG(points.slice(-6))}
+          <div class="arrow">›</div>
+        </div>
+      </div>`;
+    }
+  }
+  container.innerHTML = html;
+  container.querySelectorAll('.ex-list-item').forEach(el => {
+    el.onclick = () => {
+      state.progressExercise = { day: el.dataset.day, name: el.dataset.name };
+      state.view = 'progress-detail';
+      render();
+    };
+  });
+}
+
+async function renderExerciseCards(){
+  const container = document.getElementById('exCards');
+  if(!container) return;
+  const day = DAYS[state.currentDay];
+  let html = '';
+  const hints = {};
+  for(const ex of day.exercises){
+    hints[ex.name] = await getPrevWeekTop(state.currentDay, state.currentWeek, ex.name);
+  }
+
+  day.exercises.forEach(ex => {
+    const hint = hints[ex.name];
+    const allDone = state.dayData[ex.name].every(s => s.done);
+    html += `<div class="ex-card ${allDone?'complete':''}" data-ex="${ex.name}">
+      <div class="ex-head">
+        <div class="ex-name">${ex.name}</div>
+        <div class="ex-target">${ex.sets}×${ex.reps}</div>
+      </div>
+      <div class="ex-hint">${hint ? `<span class="ico">↗</span> Last: ${hint.weight}kg × ${hint.reps} (wk ${hint.week})` : 'No previous data yet'}</div>
+      <div class="col-labels"><span></span><span>Weight kg</span><span>Reps</span><span></span></div>
+      ${state.dayData[ex.name].map((s, i) => `
+        <div class="set-row" data-ex="${ex.name}" data-set="${i}">
+          <div class="set-num">${i+1}</div>
+          <input type="number" inputmode="decimal" placeholder="0" class="w-input" value="${s.weight}">
+          <input type="number" inputmode="numeric" placeholder="0" class="r-input" value="${s.reps}">
+          <div class="set-check ${s.done?'on':''}">✓</div>
+        </div>
+      `).join('')}
+    </div>`;
+  });
+  container.innerHTML = html;
+
+  container.querySelectorAll('.ex-card').forEach(card => {
+    const exName = card.dataset.ex;
+    card.querySelectorAll('.set-row').forEach(row => {
+      const idx = parseInt(row.dataset.set, 10);
+      const wInput = row.querySelector('.w-input');
+      const rInput = row.querySelector('.r-input');
+      const check = row.querySelector('.set-check');
+      const sync = () => {
+        state.dayData[exName][idx].weight = wInput.value;
+        state.dayData[exName][idx].reps = rInput.value;
+        const done = !!(wInput.value && rInput.value);
+        state.dayData[exName][idx].done = done;
+        check.classList.toggle('on', done);
+        const allDone = state.dayData[exName].every(s => s.done);
+        card.classList.toggle('complete', allDone);
+      };
+      wInput.oninput = sync;
+      rInput.oninput = sync;
+    });
+  });
+}
+
+async function isNewPR(day, exName, week, currentTop){
+  const logs = await loadAllLogsForDay(day);
+  let max = -Infinity;
+  logs.forEach(({week:w, data}) => {
+    if(w === week) return;
+    const ex = data.exercises && data.exercises.find(e => e.name === exName);
+    if(ex){
+      ex.sets.filter(s=>s.weight).forEach(s => { max = Math.max(max, parseFloat(s.weight)); });
+    }
+  });
+  return isFinite(max) && currentTop > max;
+}
+
+async function handleSave(){
+  const btn = document.getElementById('saveBtn');
+  btn.textContent = 'Saving…';
+  const day = DAYS[state.currentDay];
+  const payload = {
+    date: todayStr(),
+    exercises: day.exercises.map(ex => ({
+      name: ex.name,
+      sets: state.dayData[ex.name].map(s => ({ weight: s.weight, reps: s.reps }))
+    }))
+  };
+  const ok = await saveDayLog(state.currentDay, state.currentWeek, payload);
+  btn.textContent = ok ? 'Saved ✓' : 'Save failed — try again';
+  btn.classList.toggle('saved', ok);
+
+  if(ok){
+    // check for PRs
+    for(const ex of day.exercises){
+      const withWeight = state.dayData[ex.name].filter(s => s.weight && s.reps);
+      if(!withWeight.length) continue;
+      const top = Math.max(...withWeight.map(s => parseFloat(s.weight)));
+      const pr = await isNewPR(state.currentDay, ex.name, state.currentWeek, top);
+      if(pr){
+        showPRToast(`New PR — ${ex.name}: ${top}kg`);
+        launchConfetti();
+        break;
+      }
+    }
+  }
+
+  setTimeout(() => {
+    btn.textContent = 'Save This Session';
+    btn.classList.remove('saved');
+  }, 1800);
+}
+
+function showPRToast(text){
+  const toast = document.getElementById('prToast');
+  document.getElementById('prToastText').textContent = text;
+  toast.classList.add('show');
+  setTimeout(()=> toast.classList.remove('show'), 2600);
+}
+
+function launchConfetti(){
+  const canvas = document.getElementById('confettiCanvas');
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const colors = ['#FF5A36','#3ED598','#3E8BFF','#C77DFF','#FF8A5C'];
+  const particles = Array.from({length:70}, () => ({
+    x: Math.random()*canvas.width,
+    y: -20 - Math.random()*100,
+    r: 3 + Math.random()*4,
+    c: colors[Math.floor(Math.random()*colors.length)],
+    vx: (Math.random()-0.5)*3,
+    vy: 2 + Math.random()*3,
+    rot: Math.random()*360,
+    vr: (Math.random()-0.5)*10,
+  }));
+  let frame = 0;
+  function tick(){
+    frame++;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.03; p.rot += p.vr;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI/180);
+      ctx.fillStyle = p.c;
+      ctx.fillRect(-p.r/2, -p.r/2, p.r, p.r*1.8);
+      ctx.restore();
+    });
+    if(frame < 110) requestAnimationFrame(tick);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  tick();
+}
+
+async function renderProgressDetail(){
+  const body = document.getElementById('progressBody');
+  const { day, name } = state.progressExercise;
+  const logs = await loadAllLogsForDay(day);
+  const points = [];
+  logs.forEach(({week, data}) => {
+    const ex = data.exercises && data.exercises.find(e => e.name === name);
+    if(ex){
+      const withWeight = ex.sets.filter(s => s.weight && s.reps);
+      if(withWeight.length){
+        const top = withWeight.reduce((a,b)=> (parseFloat(b.weight)>parseFloat(a.weight)?b:a));
+        points.push({ week, weight: parseFloat(top.weight), reps: top.reps });
+      }
+    }
+  });
+
+  if(points.length === 0){
+    body.innerHTML = `<div class="empty-state">
+      <div class="display">No sets logged yet</div>
+      <div>Log this exercise from the Log tab to start tracking it here.</div>
+    </div>`;
+    return;
+  }
+
+  const maxW = Math.max(...points.map(p=>p.weight));
+  const minW = Math.min(...points.map(p=>p.weight));
+  const range = maxW - minW || 1;
+  const W = 300, H = 130, pad = 12;
+  const stepX = points.length > 1 ? (W - pad*2) / (points.length - 1) : 0;
+  const coords = points.map((p, i) => {
+    const x = pad + i * stepX;
+    const y = H - pad - ((p.weight - minW) / range) * (H - pad*2);
+    return { x, y, p };
+  });
+  const pathD = coords.map((c,i) => (i===0?'M':'L') + c.x.toFixed(1) + ',' + c.y.toFixed(1)).join(' ');
+  const areaD = pathD + ` L${coords[coords.length-1].x.toFixed(1)},${H} L${coords[0].x.toFixed(1)},${H} Z`;
+  const isPR = points[points.length-1].weight === maxW;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="150" style="overflow:visible;">
+    <defs><linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FF5A36" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#FF5A36" stop-opacity="0"/>
+    </linearGradient></defs>
+    <path d="${areaD}" fill="url(#grad)"/>
+    <path d="${pathD}" fill="none" stroke="#FF5A36" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${coords.map(c => `<circle cx="${c.x}" cy="${c.y}" r="3.5" fill="#F1EFEA"/>`).join('')}
+  </svg>`;
+
+  let rows = points.slice().reverse().map(p => `
+    <tr><td class="wk">Wk ${p.week}</td><td>${p.weight}kg</td><td>${p.reps} reps</td></tr>
+  `).join('');
+
+  body.innerHTML = `
+    <div class="chart-wrap">
+      <div style="font-size:12px; color:var(--ink-dim); margin-bottom:8px;">Top set weight by week ${isPR ? '<span class="pr-tag">● PR</span>' : ''}</div>
+      ${svg}
+    </div>
+    <table class="hist-table">
+      <thead><tr><th>Week</th><th>Weight</th><th>Reps</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+  document.getElementById('backBtn').onclick = () => { state.view = 'progress'; render(); };
+}
+
+(async function init(){
+  state.profile = await loadProfile();
+  if(state.profile){
+    state.currentWeek = weekFromStart(state.profile.startDate);
+    await ensureDayDataLoaded();
+  }
+  render();
+})();
+</script>
+</body>
+</html>
