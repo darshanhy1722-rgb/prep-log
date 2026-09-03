@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Viewer — Prep Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#101114; --surface:#1C1E23; --border:#2C2E34;
+    --ink:#F1EFEA; --ink-dim:#93959C; --ink-faint:#5B5D64;
+    --accent:#FF5A36; --good:#3ED598;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:'Inter',system-ui,sans-serif; padding:20px 16px 60px;}
+  .display{font-family:'Bebas Neue',sans-serif;}
+  h1{font-size:30px; margin:0 0 4px;}
+  .sub{color:var(--ink-dim); font-size:12px; margin-bottom:20px;}
+  .section{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:14px;}
+  .section h2{font-size:18px; margin:0 0 10px; display:flex; justify-content:space-between; align-items:center;}
+  .count{font-size:11px; color:var(--ink-faint); font-weight:600;}
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{text-align:left; color:var(--ink-faint); font-size:10px; text-transform:uppercase; letter-spacing:0.05em; padding:6px 4px; border-bottom:1px solid var(--border);}
+  td{padding:8px 4px; border-bottom:1px solid var(--border); vertical-align:top;}
+  .key{color:var(--accent); font-weight:600; font-size:12px;}
+  pre{margin:0; white-space:pre-wrap; word-break:break-word; font-size:12px; color:var(--ink-dim); font-family:inherit;}
+  .empty{color:var(--ink-faint); font-size:13px; padding:10px 0;}
+  .refresh-btn{
+    background:var(--accent); color:#fff; border:none; border-radius:10px; padding:10px 16px;
+    font-weight:700; font-size:13px; cursor:pointer; margin-bottom:16px;
+  }
+  .raw-toggle{color:var(--ink-faint); font-size:12px; cursor:pointer; text-decoration:underline; margin-bottom:16px; display:inline-block;}
+</style>
+</head>
+<body>
+  <h1 class="display">DATA VIEWER</h1>
+  <div class="sub">Everything currently saved in your Prep Log database</div>
+  <button class="refresh-btn" onclick="load()">Refresh</button>
+  <span class="raw-toggle" onclick="toggleRaw()">View raw JSON</span>
+  <div id="content"><div class="empty">Loading…</div></div>
+  <pre id="raw" style="display:none; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px;"></pre>
+
+<script>
+async function load(){
+  const res = await fetch('/api/all');
+  const db = await res.json();
+  document.getElementById('raw').textContent = JSON.stringify(db, null, 2);
+  render(db);
+}
+
+function render(db){
+  const c = document.getElementById('content');
+  let html = '';
+
+  // Profile
+  html += '<div class="section"><h2>Profile</h2>';
+  if(db.profile){
+    html += '<table><tr><th>Start Date</th><th>Total Weeks</th></tr><tr><td>'+db.profile.startDate+'</td><td>'+db.profile.totalWeeks+'</td></tr></table>';
+  } else {
+    html += '<div class="empty">No profile set up yet</div>';
+  }
+  html += '</div>';
+
+  // Workout logs
+  const logKeys = Object.keys(db).filter(k => k.startsWith('log:')).sort();
+  html += '<div class="section"><h2>Workout Logs <span class="count">'+logKeys.length+' sessions</span></h2>';
+  if(logKeys.length === 0){
+    html += '<div class="empty">No workouts logged yet</div>';
+  } else {
+    html += '<table><tr><th>Day / Week</th><th>Exercises Logged</th></tr>';
+    logKeys.forEach(k => {
+      const parts = k.split(':'); // log, day, wN
+      const label = parts[1] + ' — ' + parts[2];
+      const data = db[k];
+      const exCount = data.exercises ? data.exercises.filter(e => e.sets.some(s=>s.weight && s.reps)).length : 0;
+      const totalEx = data.exercises ? data.exercises.length : 0;
+      html += '<tr><td class="key">'+label+'</td><td>'+exCount+' / '+totalEx+' exercises with data ('+ (data.date||'') +')</td></tr>';
+    });
+    html += '</table>';
+  }
+  html += '</div>';
+
+  // Meal logs
+  const mealKeys = Object.keys(db).filter(k => k.startsWith('meals:')).sort().reverse();
+  html += '<div class="section"><h2>Meal Logs <span class="count">'+mealKeys.length+' days</span></h2>';
+  if(mealKeys.length === 0){
+    html += '<div class="empty">No meals logged yet</div>';
+  } else {
+    html += '<table><tr><th>Date</th><th>Meals Checked Off</th></tr>';
+    mealKeys.forEach(k => {
+      const date = k.replace('meals:', '');
+      const status = db[k];
+      const done = Object.keys(status).filter(m => status[m]);
+      html += '<tr><td class="key">'+date+'</td><td>'+(done.length ? done.join(', ') : '<span class="empty">none</span>')+'</td></tr>';
+    });
+    html += '</table>';
+  }
+  html += '</div>';
+
+  c.innerHTML = html;
+}
+
+function toggleRaw(){
+  const raw = document.getElementById('raw');
+  raw.style.display = raw.style.display === 'none' ? 'block' : 'none';
+}
+
+load();
+</script>
+</body>
+</html>
