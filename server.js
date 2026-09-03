@@ -56,6 +56,12 @@ app.get('/api/kv-list', (req, res) => {
   res.json({ keys });
 });
 
+// Get the entire database (for the data viewer page)
+app.get('/api/all', (req, res) => {
+  const db = loadDB();
+  res.json(db);
+});
+
 // Simple health check
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
